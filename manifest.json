@@ -1,11 +1,6 @@
 {
   "name": "Ricorda Le Scritture",
   "short_name": "Quiz Bibbia",
-  "description": "App privata per ricordare alcune scritture con attività interattive",
-  "start_url": "./index.html",
-  "display": "standalone",
-  "background_color": "#0f2027",
-  "theme_color": "#2c5364",
   "icons": [
     {
       "src": "icon.png",
@@ -13,5 +8,9 @@
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#020406",
+  "theme_color": "#071029"
 }
