@@ -1,0 +1,583 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Ricorda le scritture</title>
+<style>
+  :root {
+    --dark-blue:#071029;
+    --dark-green:#041a10;
+    --black:#000;
+    --accent:#60a5fa;
+  }
+  html,body{margin:0;height:100%;font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial;color:#e6eef8;overflow:hidden;background:#020406;}
+  .screen{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .5s ease;}
+  .screen.active{opacity:1;pointer-events:auto;}
+  #menu{background:var(--black);}
+  #game1{background:var(--dark-green);overflow-y:auto;}
+  #game2{background:var(--dark-blue);overflow-y:auto;}
+  #game3{background:linear-gradient(180deg,#d0d0d0,#9e9e9e);overflow-y:auto;color:#111;}
+  #game4{background:linear-gradient(180deg,#a74b00,#5c2400);overflow-y:auto;color:#fff;}
+  .btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);color:white;padding:12px 20px;border-radius:10px;margin:8px;font-size:18px;cursor:pointer;transition:background .15s ease,transform .12s ease;}
+  .btn:hover{background:rgba(255,255,255,0.15);transform:scale(1.03);}
+  .wrap{max-width:900px;margin:30px auto;padding:24px;}
+  .card{background:rgba(255,255,255,0.05);padding:20px;border-radius:12px;}
+  .scripture{font-size:18px;margin-bottom:12px;}
+  .choice{display:block;width:100%;margin-bottom:8px;padding:10px;border-radius:8px;background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:white;text-align:left;cursor:pointer;}
+  .choice.correct{background:rgba(22,163,74,0.4);}
+  .choice.wrong{background:rgba(239,68,68,0.4);}
+  .status{margin-top:12px;font-weight:bold;}
+  .scoreboard{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:12px;}
+  .badge{background:rgba(255,255,255,0.08);padding:6px 10px;border-radius:8px;}
+  
+  /* GAME 3 UX */
+  #book-display { font-size:1.6em; margin:12px 0 18px; color:#222; opacity:0; transform:translateY(8px); transition:opacity .45s ease, transform .45s ease; }
+  #book-display.show { opacity:1; transform:translateY(0); }
+  #mode-message { font-style:italic; margin-bottom:8px; color:#333; text-align:center; }
+  #options, #controls { display:flex; flex-wrap:wrap; justify-content:center; gap:10px; margin-bottom:10px; }
+  #options button, #controls button { background:rgba(0,0,0,0.06); border:1px solid rgba(0,0,0,0.08); border-radius:8px; padding:10px 14px; cursor:pointer; color:inherit; transition:transform .12s ease; min-width:72px; }
+  #options button:hover, #controls button:hover { transform:scale(1.04); }
+  #special { background:#d4a017; color:black; font-weight:700; border:none; }
+  #special:hover { background:#b98c10; }
+  #reset3 { background:#444; color:white; border:none; }
+  #progress3 { color:#222; margin-top:10px; font-weight:bold; text-align:center; }
+</style>
+</head>
+<body>
+
+<!-- MENU -->
+<div id="menu" class="screen active">
+  <h1>Ricorda le scritture</h1>
+  <p>Cosa vuoi fare?</p>
+  <button class="btn" onclick="showScreen('game1')">🟩 Allenamento personale</button>
+  <button class="btn" onclick="showScreen('game2')">🟦 Quiz a scelta multipla</button>
+  <button class="btn" onclick="showScreen('game3')">🟨 Ricordiamo i libri</button>
+  <button class="btn" onclick="showScreen('game4')">🟧 Libri, autori e luoghi</button>
+</div>
+
+
+<!-- GAME 1 -->
+<div id="game1" class="screen" style="max-width:600px; margin:40px auto; padding:20px; background:#041a10; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.3);">
+  <div style="text-align:center;">
+    <button class="btn" onclick="showScreen('menu')" style="background:#222; color:white;">🏠 Torna al menu</button>
+  </div>
+  <h2 style="text-align:center;">Allenamento personale</h2>
+  <p style="text-align:center;">🗣 Di quale scrittura si tratta?</p>
+  <div class="card">
+    <div id="scripture1" class="scripture" style="text-align:center; word-wrap:break-word; white-space:normal; font-size:1.2em; margin-bottom:16px;">
+      Caricamento… Questo è un esempio di scrittura che si estende su più righe per testare il wrapping del testo.
+    </div>
+    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-top:12px;">
+      <button id="showHint1" class="btn">💡 Suggerimento</button>
+      <button id="showAnswer1" class="btn">👁️ Mostra risposta</button>
+      <button id="next1" class="btn">➡️ Prossima</button>
+    </div>
+    <div id="hint1" class="status" style="text-align:center; margin-top:10px;"></div>
+    <div id="answer1" class="status" style="display:none; color:#60a5fa; text-align:center; margin-top:10px;"></div>
+  </div>
+</div>
+
+
+<!-- GAME 2 -->
+<div id="game2" class="screen" style="max-width:600px; margin:40px auto; padding:20px; background:#041a10; border-radius:12px; box-shadow:0 0 10px rgba(0,0,0,0.3);">
+  <div style="text-align:center;">
+    <button class="btn" onclick="showScreen('menu')" style="background:#222; color:white;">🏠 Torna al menu</button>
+  </div>
+  <h1 style="text-align:center;">Quiz a scelta multipla</h1>
+  <div class="card">
+    <div id="scripture2" class="scripture" style="text-align:center; word-wrap:break-word; white-space:normal; font-size:1.2em; margin-bottom:16px;">
+      Loading…
+    </div>
+    <div id="choices2" style="display:flex; flex-direction:column; gap:10px; align-items:center;"></div>
+    <div id="status2" class="status" style="text-align:center; margin-top:10px;"></div>
+    <div class="scoreboard" style="display:flex; justify-content:space-around; margin-top:20px;">
+      <div class="badge">Domanda: <span id="qnum2">0</span>/<span id="total2">0</span></div>
+      <div class="badge">Punteggio: <span id="score2">0</span></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- GAME 3 -->
+<div id="game3" class="screen">
+  <div class="wrap"><div style="text-align:center;">
+  <button class="btn" onclick="showScreen('menu')" style="background:#5c788a; color:white;">🏠 Torna al menu</button>
+</div>
+    <h1 style="text-align:center;">📖 Ricordiamo i libri (NWT)</h1>
+    <p style="text-align:center;"><strong>🗣 Continua la sequenza: quali libri seguono?</strong></p>
+    <p id="mode-message"></p>
+  <div id="book-display" aria-live="polite" style="font-weight:bold; color:#003366; text-align:center;"></div>
+    <div id="options" role="group" aria-label="opzioni"></div>
+    <div id="controls">
+      <button id="special" class="btn">🌟 Round Speciale</button>
+      <button id="reset3" class="btn">🔄 Reset</button>
+    </div>
+    <div id="progress3"></div>
+  </div>
+
+
+</div>
+
+<!-- GAME 4 -->
+<div id="game4" class="screen">
+  <div class="wrap">
+      <button class="btn" onclick="showScreen('menu')">🏠 Torna al menu</button>
+    </div>
+    <h1>🟧 Libri, autori e luoghi</h1>
+    <p style="text-align:center;">Scegli una modalità e prova a rispondere.</p>
+    <div style="display:flex;justify-content:center;gap:10px;margin-bottom:14px;">
+      <button id="modeAuthor" class="btn">✍️ Autore</button>
+      <button id="modePlaceYear" class="btn">📜 Luogo + Anno</button>
+    </div>
+    <div class="card">
+      <div id="question4" class="scripture">Domanda...</div>
+      <div id="choices4"></div>
+      <div id="status4" class="status"></div>
+      <div class="scoreboard">
+        <div class="badge">Domanda: <span id="qnum4">0</span>/5</div>
+        <div class="badge">Punteggio: <span id="score4">0</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(id==='game1') startGame1();
+  if(id==='game2') startGame2();
+  if(id==='game3') startGame3();
+  if(id==='game4') startGame4();
+}
+
+/* === SAMPLE DATA === */
+const DATA=[
+{ref:'Ger 10:23',text:"So bene, o Geova, che l’uomo non è padrone della sua via. L’uomo che cammina non è padrone nemmeno di dirigere i suoi passi."},
+{ref:'Dan 2:44',text:'““Ai giorni di quei re l’Iddio del cielo istituirà un regno che non sarà mai distrutto. Questo regno non passerà nelle mani di nessun altro popolo; frantumerà tutti questi regni e metterà loro fine, e sarà l’unico a durare per sempre.”'},
+{ref:'Giob. 26:7',text:'Egli distende il cielo del nord nel vuoto e tiene sospesa la terra sul nulla;'},
+{ref:'Giov. 3:16',text:'“Infatti Dio ha tanto amato il mondo che ha dato il suo Figlio unigenito, affinché chiunque esercita fede in lui non sia distrutto ma abbia vita eterna.'},
+{ref:'Matt 28:19-20',text:'Perciò andate e fate discepoli di persone di tutte le nazioni, battezzandole nel nome del Padre e del Figlio e dello spirito santo, insegnando loro a osservare tutte le cose che vi ho comandato. Ed ecco, io sono con voi tutti i giorni fino alla conclusione del sistema di cose'},
+{ref:'2 Tim 3:1-2',text:'Ma sappi questo: negli ultimi giorni ci saranno tempi difficili.  Infatti gli uomini saranno egoisti, attaccati al denaro, gradassi, superbi, bestemmiatori, disubbidienti ai genitori, ingrati, sleali'},
+{ref:'2 Tim 3:16',text:'Tutta la Scrittura è ispirata da Dio ed è utile per insegnare, per riprendere, per correggere e per disciplinare nella giustizia, affinché l’uomo di Dio sia del tutto competente, ben preparato per ogni opera buona.'},
+{ref:'Rev 21:4',text:'Ed egli asciugherà ogni lacrima dai loro occhi, e la morte non ci sarà più, né ci sarà più lutto né lamento né dolore. Le cose di prima sono passate '},
+{ref:'Rev 11:18',text:'Le nazioni si adirarono, e si accese la tua ira, e giunse il tempo stabilito per giudicare i morti, per dare la ricompensa ai tuoi schiavi, i profeti, ai santi e a quelli che temono il tuo nome, piccoli e grandi, e per distruggere quelli che stanno distruggendo la terra'},
+{ref:'1 Cor 6:9-11',text:'Non sapete che gli ingiusti non erediteranno il Regno di Dio? Non illudetevi: né persone che praticano l’immoralità sessuale, né idolatri,i né adulteri, né uomini che si sottopongono ad atti omosessuali, né uomini che praticano l’omosessualità, né ladri, né avidi, né ubriaconi, né oltraggiatori, né estorsorio erediteranno il Regno di Dio.  E alcuni di voi erano persone del genere'},
+{ref:'Eccl 8:9',text:'Ho visto tutto questo, e ho rivolto il mio cuore a ogni opera che è stata fatta sotto il sole, durante il tempo in cui l’uomo ha dominato l’uomo a suo danno.'},
+{ref:'1 Giov. 5:19',text:'Noi sappiamo che abbiamo origine da Dio, ma tutto il mondo è in potere del Malvagio.'},
+{ref:'Luca 4:5-7',text:'Il Diavolo lo condusse dunque su un monte e gli mostrò in un istante tutti i regni della terra abitata,  dopodiché gli disse: “Ti darò tutta questa autorità e lo splendore di questi regni, perché essa mi è stata data e io la do a chi voglio. Perciò, se fai un atto di adorazione davanti a me, sarà tutta tua”.'},
+{ref:'Isa 65:21-22',text:'Costruiranno case e le abiteranno, pianteranno vigne e ne mangeranno il frutto. Non costruiranno perché qualcun altro abiti e non pianteranno perché qualcun altro mangi, perché i giorni del mio popolo saranno come i giorni dell’albero e i miei eletti godranno pienamente il frutto del loro lavoro'},
+{ref:'Salmi 37:10-11',text:'Ancora un po’ e i malvagi non ci saranno più... Ma i mansueti erediteranno la terra...'},
+{ref:'Matt 22:37-39',text:'Gli rispose: “‘Devi amare Geova tuo Dio con tutto il tuo cuore, con tutta la tua anima e con tutta la tua mente’. Questo è il più grande e il primo comandamento. 39 Il secondo, simile a questo, è: ‘Devi amare il tuo prossimo come te stesso’.'},
+{ref:'Prov 16:5',text:'Chi è orgoglioso di cuore è detestabile per Geova.'},
+{ref:'1 Piet 3:3-4',text:'Il vostro ornamento non sia quello esteriore... ma la persona segreta del cuore...'},
+{ref:'Giac 4:7',text:'Sottomettetevi perciò a Dio; ma opponetevi al Diavolo, e lui fuggirà da voi.'},
+{ref:'1 Corinti 10:12',text:'Chi pensa di stare in piedi badi di non cadere'},
+{ref:'Esodo 3:15',text:'“Devi dire questo agli israeliti: ‘Geova, l’Iddio dei vostri antenati, l’Iddio di Abraamo, l’Iddio di Isacco e l’Iddio di Giacobbe, mi ha mandato da voi’.'},
+{ref:'Giacomo 4:4',text:'Adultere,* non sapete che essere amici del mondo significa essere nemici di Dio? Perciò chi vuole essere amico del mondo si rende nemico di Dio'},
+{ref:'1 Timoteo 6:7,8',text:'Infatti non abbiamo portato nulla nel mondo, e nulla possiamo portarne via. Quindi, avendo di che mangiare e di che vestirci, di queste cose ci accontenteremo.'},
+{ref:'Matteo 6:24',text:'Nessuno può essere schiavo di due padroni, perché o odierà l’uno e amerà l’altro, o si legherà all’uno e disprezzerà l’altro. Non potete essere schiavi di Dio e della Ricchezza.'},
+{ref:'1 Pietro 2:21',text:'A questo infatti siete stati chiamati, perché Cristo stesso soffrì per voi, lasciandovi un modello, affinché seguiate attentamente le sue orme.'},
+{ref:'Giacomo 1:14, 15',text:'Ma ognuno è messo alla prova essendo attirato e adescato* dal proprio desiderio.a  Quindi il desiderio, quando è diventato fertile, partorisce il peccato; e il peccato, una volta commesso, produce la morte'},
+{ref:'Salmo 55:22',text:'Getta su Geova il tuo peso, ed egli ti sosterrà. Non permetterà mai che il giusto cada.'},
+{ref:'2 Corinti 9:7',text:'Ciascuno faccia come ha deciso nel suo cuore, non di malavoglia né per forza,a perché Dio ama chi dona con gioia.'},
+{ref:'Proverbi 12:15',text:'La via dello stolto è giusta ai suoi occhi, ma chi è saggio accetta i consigli.'},
+{ref:'Efesini 4:26',text:'Adiratevi ma non peccate; il sole non tramonti mentre siete ancora in collera'},
+{ref:'Tito 1:15',text:'Tutte le cose sono pure per i puri;a ma per quelli che sono contaminati e senza fede nulla è puro, perché la loro mente e la loro coscienza sono contaminate'},
+{ref:'Proverbi 3:11, 12',text:'Figlio mio, non respingere la disciplina di Geova e non rigettare la sua riprensione,  perché Geova riprende colui che ama, come fa un padre con il figlio di cui si compiace.'},
+{ref:'Ebrei 11:1',text:'La fede è la certezza che quello che si spera si realizzerà,a la chiara dimostrazione* di realtà che non si vedono.'},
+{ref:'Isa 42:8',text:'Io sono Geova. Questo è il mio nome; non do la mia gloria a nessun altro.'},
+// FIX START — added missing comma below
+{ref:"Romani 10:9", text:"perché se con la bocca dichiari pubblicamente che Gesù è Signore e con il cuore eserciti fede che Dio lo ha risuscitato dai morti, sarai salvato."},
+// FIX END
+{ref:"Efesini 2:8–9", text:"È per questa immeritata bontà che siete stati salvati mediante la fede, e ciò non viene da voi: è il dono di Dio. Non è dovuto alle opere, e dunque nessuno può vantarsene."},
+{ref:"Atti 4:12", text:"E non c’è salvezza in nessun altro, perché non c’è sotto il cielo nessun altro nome che sia stato dato agli uomini mediante cui dobbiamo essere salvati."},
+{ref:"Tito 3:5", text:"Egli ci ha salvato lavandoci mediante il bagno che ci ha portato alla vita e rinnovandoci mediante lo spirito santo."},
+{ref:"1 Corinti 13:4–7", text:"L’amore è paziente e premuroso. L’amore non è geloso, non si vanta, non si gonfia d’orgoglio, non si comporta in modo indecente, non cerca il proprio interesse, non cede all’ira, non tiene conto del male. Non si rallegra dell’ingiustizia, ma si rallegra della verità. Copre ogni cosa, crede ogni cosa, spera ogni cosa, sopporta ogni cosa."},
+{ref:"Romani 5:8", text:"Dio ci raccomanda il suo amore: infatti mentre eravamo ancora peccatori Cristo è morto per noi"},
+{ref:"1 Giovanni 4:7–8", text:"Diletti, continuiamo ad amarci gli uni gli altri, perché l’amore è da Dio, e chiunque ama è stato generato da Dio e acquista la conoscenza di Dio. Chi non ama non ha conosciuto Dio, perché Dio è amore."},
+{ref:"Colossesi 3:14", text:"Ma, oltre a tutte queste cose, rivestitevi d’amore, poiché è un perfetto vincolo d’unione."},
+{ref:"Filippesi 4:13", text:"Per ogni cosa ho forza grazie a colui che mi dà potenza"},
+{ref:"Isaia 40:31", text:"Ma quelli che sperano in Geova acquistano nuove forze..."},
+{ref:"Giosuè 1:9", text:"Non ti ho comandato di essere coraggioso e forte? Non farti prendere dal terrore e non aver paura, perché Geova tuo Dio è con te ovunque tu vada..."},
+{ref:"Salmo 23:4", text:"Benché io cammini nella valle della profonda ombra, non temo alcun male perché tu sei con me;"},
+{ref:"2 Timoteo 1:7", text:"Dio [...] non ci ha dato uno spirito di codardia, ma di potenza, di amore e di assennatezza"},
+{ref:"1 Tessalonicesi 5:16–18", text:"Siate sempre allegri. Pregate incessantemente. Circa ogni cosa, rendete grazie. Poiché questa è riguardo a voi la volontà di Dio unitamente a Cristo Gesù."},
+{ref:"Proverbi 3:5–6", text:"Confida in Geova con tutto il tuo cuore e non fare affidamento sulla tua intelligenza. Tieni conto di lui in tutte le tue vie, e lui renderà diritti i tuoi sentieri"},
+{ref:"Salmo 46:1", text:"Dio è il nostro rifugio e la nostra forza, un aiuto che si trova prontamente nelle difficoltà."},
+{ref:"Giacomo 5:16", text:"Perciò confessate apertamente i vostri peccati gli uni agli altri e pregate gli uni per gli altri, così che siate sanati. La supplica del giusto ha un effetto potente."},
+{ref:"Giacomo 1:5", text:"Se qualcuno di voi manca di sapienza, continui a chiederla a Dio e gli sarà data, perché egli dà generosamente a tutti e senza trovare da ridire"},
+{ref:"Salmo 119:105", text:"La tua parola è una lampada per il mio piede e una luce sul mio cammino."},
+{ref:"Proverbi 1:7", text:"Il timore di Geova è il principio della conoscenza; solo gli stolti disprezzano la sapienza e la disciplina."},
+{ref:"Ecclesiaste 3:1", text:"Per ogni cosa c'è un tempo stabilito, un tempo per ogni attività sotto il cielo"},
+{ref:"Colossesi 3:16", text:"La parola del Cristo dimori abbondantemente in voi con ogni sapienza. Continuate a istruirvi e a incoraggiarvi gli uni gli altri con salmi, inni e canti spirituali innalzati con gratitudine; continuate a cantare a Geova con il cuore."},
+{ref:"Giovanni 14:27", text:"Vi lascio pace; vi do la mia pace, ma non nel modo in cui lo fa il mondo. Il vostro cuore non sia turbato né si intimorisca"},
+{ref:"Salmo 34:18", text:"Geova è vicino a quelli che hanno il cuore affranto; salva quelli dallo spirito abbattuto."},
+{ref:"Matteo 11:28", text:"Venite a me, voi tutti che siete affaticati e oppressi, e io vi darò riposo. Prendete su di voi il mio giogo e imparate da me, perché io sono mansueto e umile ..."},
+{ref:"Galati 5:22–23", text:"Invece il frutto dello spirito è amore, gioia, pace, pazienza, benignità, bontà, fede, mitezza, autocontrollo. Contro queste cose non c’è legge."},
+{ref:"Romani 12:2", text:"E smettete di farvi modellare da questo sistema di cose, ma siate trasformati rinnovando la vostra mente, così da accertarvi della volontà di Dio, di ciò che è buono, perfetto e gradito a lui."},
+{ref:"Atti 1:8", text:"Voi riceverete potenza quando lo Spirito Santo verrà su di voi, e mi sarete testimoni in Gerusalemme, e in tutta la Giudea e Samaria, e fino all'estremità della terra"},
+{ref:"1 Corinti 1:23", text:"Tutto è lecito, ma non tutto è vantaggioso. Tutto è lecito, ma non tutto edifica."},
+{ref:"Romani 1:16", text:"Poiché non mi vergogno della buona notizia; essa è, infatti, potenza di Dio per la salvezza di ognuno che ha fede..."}
+];
+const libriBiblici=[
+  {nome:"Genesi", autore:"Mosè", luogo:"Deserto", anno:"1513 aEV"},
+  {nome:"Esodo", autore:"Mosè", luogo:"Deserto", anno:"1512 aEV"},
+  {nome:"Levitico", autore:"Mosè", luogo:"Deserto", anno:"1512 aEV"},
+  {nome:"Numeri", autore:"Mosè", luogo:"Deserto e pianure di Moab", anno:"1473 aEV"},
+  {nome:"Deuteronomio", autore:"Mosè", luogo:"Pianure di Moab", anno:"1473 aEV"},
+  {nome:"Giosuè", autore:"Giosuè", luogo:"Canaan", anno:"ca. 1450 aEV"},
+  {nome:"Giudici", autore:"Samuele", luogo:"Israele", anno:"ca. 1100 aEV"},
+  {nome:"Rut", autore:"Samuele", luogo:"Israele", anno:"ca. 1090 aEV"},
+  {nome:"1 Samuele", autore:"Samuele, Gad, Natan", luogo:"Israele", anno:"ca. 1078 aEV"},
+  {nome:"2 Samuele", autore:"Gad, Natan", luogo:"Israele", anno:"ca. 1040 aEV"},
+  {nome:"1 Re", autore:"Geremia (attribuito)", luogo:"Giuda", anno:"ca. 1040–580 aEV"},
+  {nome:"2 Re", autore:"Geremia", luogo:"Egitto", anno:"580 aEV"},
+  {nome:"1 Cronache", autore:"Esdra", luogo:"Gerusalemme (forse)", anno:"incerto"},
+  {nome:"2 Cronache", autore:"Esdra", luogo:"Gerusalemme (forse)", anno:"ca. 460 aEV"},
+  {nome:"Esdra", autore:"Esdra", luogo:"Gerusalemme", anno:"ca. 460 aEV"},
+  {nome:"Neemia", autore:"Neemia", luogo:"Gerusalemme", anno:"dopo il 443 aEV"},
+  {nome:"Ester", autore:"Mardocheo", luogo:"Susa, Elam", anno:"ca. 475 aEV"},
+  {nome:"Giobbe", autore:"Mosè (attribuito)", luogo:"Deserto", anno:"ca. 1473 aEV"},
+  {nome:"Salmi", autore:"Davide e altri", luogo:"Gerusalemme (vario)", anno:"raccolta ca. 460 aEV"},
+  {nome:"Proverbi", autore:"Salomone, Agur, Lemuel", luogo:"Gerusalemme", anno:"ca. 717 aEV"},
+  {nome:"Ecclesiaste", autore:"Salomone", luogo:"Gerusalemme", anno:"ca. 1000 aEV (incerto)"},
+  {nome:"Cantico dei Cantici", autore:"Salomone", luogo:"Gerusalemme", anno:"ca. 1020 aEV"},
+  {nome:"Isaia", autore:"Isaia", luogo:"Gerusalemme", anno:"ca. 778–dopo il 732 aEV"},
+  {nome:"Geremia", autore:"Geremia", luogo:"Giuda; Egitto", anno:"580 aEV"},
+  {nome:"Lamentazioni", autore:"Geremia (attribuito)", luogo:"presso Gerusalemme", anno:"607 aEV"},
+  {nome:"Ezechiele", autore:"Ezechiele", luogo:"Babilonia", anno:"591 aEV"},
+  {nome:"Daniele", autore:"Daniele", luogo:"Babilonia", anno:"536 aEV"},
+  {nome:"Osea", autore:"Osea", luogo:"Samaria (regione)", anno:"dopo il 745 aEV"},
+  {nome:"Gioele", autore:"Gioele", luogo:"Giuda", anno:"ca. 820 aEV (?)"},
+  {nome:"Amos", autore:"Amos", luogo:"Giuda (o Israele)", anno:"ca. 804 aEV"},
+  {nome:"Abdia", autore:"Abdia", luogo:"incerto", anno:"ca. 607 aEV"},
+  {nome:"Giona", autore:"Giona", luogo:"incerto", anno:"ca. 844 aEV"},
+  {nome:"Michea", autore:"Michea", luogo:"Giuda", anno:"ca. 777–717 aEV"},
+  {nome:"Naum", autore:"Naum", luogo:"Giuda", anno:"prima del 632 aEV"},
+  {nome:"Abacuc", autore:"Abacuc", luogo:"Giuda", anno:"ca. 628 aEV (?)"},
+  {nome:"Sofonia", autore:"Sofonia", luogo:"Giuda", anno:"prima del 648 aEV"},
+  {nome:"Aggeo", autore:"Aggeo", luogo:"Gerusalemme", anno:"520 aEV"},
+  {nome:"Zaccaria", autore:"Zaccaria", luogo:"Gerusalemme", anno:"518 aEV"},
+  {nome:"Malachia", autore:"Malachia", luogo:"Gerusalemme", anno:"dopo il 443 aEV"},
+
+  /* Scritture Greche (Nuovo Testamento) */
+  {nome:"Matteo", autore:"Matteo", luogo:"Israele", anno:"ca. 41"},
+  {nome:"Marco", autore:"Marco", luogo:"Roma", anno:"ca. 60–65"},
+  {nome:"Luca", autore:"Luca", luogo:"Cesarea", anno:"ca. 56–58"},
+  {nome:"Giovanni", autore:"Apostolo Giovanni", luogo:"Efeso (o nei pressi)", anno:"ca. 98"},
+  {nome:"Atti", autore:"Luca", luogo:"Roma", anno:"ca. 61"},
+  {nome:"Romani", autore:"Paolo", luogo:"Corinto", anno:"ca. 56"},
+  {nome:"1 Corinti", autore:"Paolo", luogo:"Efeso", anno:"ca. 55"},
+  {nome:"2 Corinti", autore:"Paolo", luogo:"Macedonia", anno:"ca. 55"},
+  {nome:"Galati", autore:"Paolo", luogo:"Corinto o Antiochia di Siria", anno:"ca. 50–52"},
+  {nome:"Efesini", autore:"Paolo", luogo:"Roma", anno:"ca. 60–61"},
+  {nome:"Filippesi", autore:"Paolo", luogo:"Roma", anno:"ca. 60–61"},
+  {nome:"Colossesi", autore:"Paolo", luogo:"Roma", anno:"ca. 60–61"},
+  {nome:"1 Tessalonicesi", autore:"Paolo", luogo:"Corinto", anno:"ca. 50"},
+  {nome:"2 Tessalonicesi", autore:"Paolo", luogo:"Corinto", anno:"ca. 51"},
+  {nome:"1 Timoteo", autore:"Paolo", luogo:"Macedonia", anno:"ca. 61–64"},
+  {nome:"2 Timoteo", autore:"Paolo", luogo:"Roma", anno:"ca. 65"},
+  {nome:"Tito", autore:"Paolo", luogo:"Macedonia (?)", anno:"ca. 61–64"},
+  {nome:"Filemone", autore:"Paolo", luogo:"Roma", anno:"ca. 60–61"},
+  {nome:"Ebrei", autore:"Paolo (attribuito, incerto)", luogo:"Roma", anno:"ca. 61"},
+  {nome:"Giacomo", autore:"Giacomo (fratello di Gesù)", luogo:"Gerusalemme", anno:"prima del 62"},
+  {nome:"1 Pietro", autore:"Pietro", luogo:"Babilonia", anno:"ca. 62–64"},
+  {nome:"2 Pietro", autore:"Pietro", luogo:"Babilonia (?)", anno:"ca. 64"},
+  {nome:"1 Giovanni", autore:"Apostolo Giovanni", luogo:"Efeso (o nei pressi)", anno:"ca. 98"},
+  {nome:"2 Giovanni", autore:"Apostolo Giovanni", luogo:"Efeso (o nei pressi)", anno:"ca. 98"},
+  {nome:"3 Giovanni", autore:"Apostolo Giovanni", luogo:"Efeso (o nei pressi)", anno:"ca. 98"},
+  {nome:"Giuda", autore:"Giuda (fratello di Gesù)", luogo:"Israele (?)", anno:"ca. 65"},
+  {nome:"Rivelazione", autore:"Apostolo Giovanni", luogo:"Patmos", anno:"ca. 96"}
+];
+
+/* ---------- GAME 1 ---------- */
+let idx1 = 0, DATA1_selected = [];
+
+function startGame1() {
+  idx1 = 0;
+  const idxs = [...Array(DATA.length).keys()];
+  shuffle(idxs);
+  DATA1_selected = idxs.map(i => DATA[i]);
+  showCurrent1();
+}
+
+function showCurrent1() {
+  const d = DATA1_selected[idx1];
+  document.getElementById('scripture1').textContent = d.text;
+  document.getElementById('answer1').textContent = d.ref;
+  document.getElementById('answer1').style.display = 'none';
+  document.getElementById('hint1').textContent = '';
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('showHint1').onclick = () => {
+    document.getElementById('hint1').textContent = '📖 Libro: ' + DATA1_selected[idx1].ref.split(' ')[0];
+  };
+  document.getElementById('showAnswer1').onclick = () => {
+    document.getElementById('answer1').style.display = 'block';
+  };
+  document.getElementById('next1').onclick = () => {
+    idx1++;
+    if (idx1 >= DATA1_selected.length) {
+      document.getElementById('scripture1').textContent = "🎉 Hai completato tutte le scritture!";
+      document.getElementById('answer1').style.display = 'none';
+      document.getElementById('hint1').textContent = '';
+    } else {
+      showCurrent1();
+    }
+  };
+});
+
+
+/* ---------- GAME 2 ---------- */
+let idx2 = 0, order2 = [], score2 = 0;
+
+function startGame2() {
+  const allIndices = [...Array(DATA.length).keys()];
+  shuffle(allIndices);
+  order2 = allIndices.slice(0, 5); // Limit to 5 questions
+  idx2 = 0;
+  score2 = 0;
+  showCurrent2();
+}
+
+function showCurrent2() {
+  if (idx2 >= order2.length) {
+    document.getElementById('scripture2').textContent = '🎉 Finito!';
+    document.getElementById('choices2').innerHTML = '';
+    document.getElementById('status2').textContent = `Punteggio: ${score2}`;
+    return;
+  }
+
+  const item = DATA[order2[idx2]];
+  document.getElementById('scripture2').textContent = item.text;
+
+  const choices = DATA.map(d => d.ref);
+  shuffle(choices);
+  const opts = choices.slice(0, 3);
+  if (!opts.includes(item.ref)) {
+    opts[Math.floor(Math.random() * opts.length)] = item.ref;
+  }
+
+  const cDiv = document.getElementById('choices2');
+  cDiv.innerHTML = '';
+  opts.forEach(o => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.textContent = o;
+    b.onclick = () => {
+      if (o === item.ref) {
+        b.classList.add('correct');
+        score2 += 10;
+        document.getElementById('status2').textContent = '✅ Corretto!';
+      } else {
+        b.classList.add('wrong');
+        score2 -= 5;
+        document.getElementById('status2').textContent = `❌ Giusto: ${item.ref}`;
+      }
+      document.getElementById('score2').textContent = score2;
+      idx2++;
+      setTimeout(showCurrent2, 2000);
+    };
+    cDiv.appendChild(b);
+  });
+
+  document.getElementById('qnum2').textContent = idx2 + 1;
+  document.getElementById('total2').textContent = order2.length;
+  document.getElementById('score2').textContent = score2;
+}
+
+
+/* ---------------- GAME 3 (Memory game) ---------------- */
+const libriOriginali = [
+  "Genesi","Esodo","Levitico","Numeri","Deuteronomio",
+  "Giosuè","Giudici","Rut","1 Samuele","2 Samuele","1 Re","2 Re",
+  "1 Cronache","2 Cronache","Esdra","Neemia","Ester","Giobbe","Salmi","Proverbi",
+  "Ecclesiaste","Cantico dei Cantici","Isaia","Geremia","Lamentazioni","Ezechiele","Daniele",
+  "Osea","Gioele","Amos","Abdia","Giona","Michea","Naum","Abacuc","Sofonia","Aggeo","Zaccaria","Malachia",
+  "Matteo","Marco","Luca","Giovanni","Atti","Romani","1 Corinti","2 Corinti","Galati","Efesini",
+  "Filippesi","Colossesi","1 Tessalonicesi","2 Tessalonicesi","1 Timoteo","2 Timoteo","Tito","Filemone","Ebrei","Giacomo",
+  "1 Pietro","2 Pietro","1 Giovanni","2 Giovanni","3 Giovanni","Giuda","Rivelazione"
+];
+let libri=[...libriOriginali];
+let indiceCorrente=0, opzioniMostrate=0, roundSpeciale=false;
+
+function startGame3(){
+  inizializzaGioco();
+}
+
+function indiceCasuale(max = libri.length - 4) {
+  return Math.floor(Math.random() * Math.max(1, max));
+}
+
+function inizializzaGioco() {
+  indiceCorrente = indiceCasuale();
+  opzioniMostrate = 0;
+  roundSpeciale = false;
+  aggiornaMessaggio();
+  mostraLibro();
+}
+
+function aggiornaMessaggio() {
+  const msg = document.getElementById("mode-message");
+  if(msg) msg.textContent = roundSpeciale
+    ? "🌟 Prova in ordine inverso... Premi Reset per ricominciare"
+    : "";
+}
+
+function mostraLibro() {
+  const disp = document.getElementById("book-display");
+  if(!disp) return;
+  disp.classList.remove('show');
+  setTimeout(()=>{
+    disp.textContent = libri[indiceCorrente];
+    setTimeout(()=>disp.classList.add('show'), 30);
+  }, 80);
+
+  const optionsDiv = document.getElementById("options");
+  if(optionsDiv) optionsDiv.innerHTML = "";
+  opzioniMostrate = 0;
+  mostraOpzioni(4);
+  aggiornaProgresso();
+}
+
+function mostraOpzioni(quante) {
+  const pulsantiDiv = document.getElementById("options");
+  if(!pulsantiDiv) return;
+  const fine = Math.min(indiceCorrente + 1 + opzioniMostrate + quante, libri.length);
+  const nuoviLibri = libri.slice(indiceCorrente + 1 + opzioniMostrate, fine);
+  opzioniMostrate += nuoviLibri.length;
+  nuoviLibri.forEach(libro => {
+    const btn = document.createElement("button");
+    const iniziali = libro.replace(/^(1 |2 |3 )/, "").split(" ").map(w => w[0]).join("").substring(0,2).toUpperCase();
+    btn.style.fontWeight = 'bold';
+    btn.textContent = iniziali;
+    btn.className = 'btn';
+    btn.onclick = () => {
+      btn.textContent = libro;
+      btn.disabled = true;
+    };
+    pulsantiDiv.appendChild(btn);
+  });
+
+  if (!roundSpeciale && indiceCorrente + 1 + opzioniMostrate < libri.length) {
+    mostraContinua();
+  } else {
+    nascondiContinua();
+  }
+}
+
+function mostraContinua() {
+  if (!document.getElementById("continua")) {
+    const btn = document.createElement("button");
+    btn.id = "continua";
+    btn.className = 'btn';
+    btn.textContent = "➕ Estendi...";
+    btn.onclick = () => {
+      btn.remove();
+      mostraOpzioni(3);
+    };
+    document.getElementById("controls").appendChild(btn);
+  }
+}
+
+function nascondiContinua() {
+  const btn = document.getElementById("continua");
+  if (btn) btn.remove();
+}
+
+function aggiornaProgresso(){
+  const p = document.getElementById("progress3");
+  if(p) {
+    if(!roundSpeciale) p.textContent = `Libro ${indiceCorrente+1} di ${libri.length}`;
+    else p.textContent = ""; // hide counter during round special
+  }
+}
+
+function resetGame3(){
+  libri = [...libriOriginali];
+  roundSpeciale = false;
+  indiceCorrente = indiceCasuale();
+  opzioniMostrate = 0;
+  aggiornaMessaggio();
+  mostraLibro();
+}
+
+// Special round (reverse order)
+document.getElementById("special").addEventListener('click', ()=>{
+  roundSpeciale = true;
+  libri = [...libriOriginali].reverse();
+  indiceCorrente = indiceCasuale();
+  opzioniMostrate = 0;
+  aggiornaMessaggio();
+  mostraLibro();
+});
+
+// Reset button
+document.getElementById("reset3").addEventListener('click', ()=>{
+  resetGame3();
+});
+
+// Initialize progress and continue/reset buttons on DOM load
+document.addEventListener('DOMContentLoaded', ()=>{
+  const p = document.getElementById("progress3");
+  if(p) p.textContent = '';
+  // don't auto-start games until user clicks menu
+});/* ---------- GAME 4 ---------- */
+let mode4='autore',score4=0,idx4=0,order4=[],totalQ4=5;
+function startGame4(){
+  order4=[...Array(libriBiblici.length).keys()];
+  shuffle(order4);order4=order4.slice(0,totalQ4);
+  idx4=0;score4=0;
+  document.getElementById('score4').textContent=score4;
+  showQuestion4();
+}
+function showQuestion4(){
+  if(idx4>=order4.length){
+    document.getElementById('question4').innerHTML="🎉 Fine quiz!";
+    document.getElementById('choices4').innerHTML='';
+    document.getElementById('status4').textContent=`Punteggio finale: ${score4}/`+ (totalQ4*10);
+    return;
+  }
+  const l=libriBiblici[order4[idx4]];
+  let domanda,corretta,scelte;
+  if(mode4==='autore'){
+    domanda=`Chi è l'autore del libro di <b>${l.nome}</b>?`;
+    corretta=l.autore||'incerto';
+    scelte=[...new Set(libriBiblici.map(x=>x.autore||'incerto'))];
+  }else{
+    domanda=`Dove e quando fu scritto <b>${l.nome}</b>?`;
+    corretta=`${l.luogo||'incerto'} — ${l.anno||'incerto'}`;
+    scelte=[...new Set(libriBiblici.map(x=>`${x.luogo||'incerto'} — ${x.anno||'incerto'}`))];
+  }
+  shuffle(scelte);scelte=scelte.slice(0,3);
+  if(!scelte.includes(corretta))scelte[Math.floor(Math.random()*scelte.length)]=corretta;
+  document.getElementById('question4').innerHTML=domanda;
+  const c4=document.getElementById('choices4');c4.innerHTML='';
+  scelte.forEach(r=>{
+    const b=document.createElement('button');
+    b.className='choice';b.textContent=r;
+    b.onclick=()=>{
+      document.querySelectorAll('#choices4 .choice').forEach(x=>x.disabled=true);
+      if(r===corretta){b.classList.add('correct');score4+=10;document.getElementById('status4').textContent='✅ Corretto!';}
+      else{b.classList.add('wrong');score4-=5;document.getElementById('status4').textContent=`❌ Giusto: ${corretta}`;}
+      document.getElementById('score4').textContent=score4;
+      document.getElementById('qnum4').textContent=idx4+1;
+      idx4++;setTimeout(showQuestion4,2000);
+    };
+    c4.appendChild(b);
+  });
+  document.getElementById('qnum4').textContent=idx4+1;
+  document.getElementById('score4').textContent=score4;
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('modeAuthor').onclick=()=>{mode4='autore';startGame4();};
+  document.getElementById('modePlaceYear').onclick=()=>{mode4='luogoAnno';startGame4();};
+});
+</script>
+</body>
+</html>
