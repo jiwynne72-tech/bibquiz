@@ -578,6 +578,11 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('modeAuthor').onclick=()=>{mode4='autore';startGame4();};
   document.getElementById('modePlaceYear').onclick=()=>{mode4='luogoAnno';startGame4();};
 });
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js');
+  }
 </script>
 </body>
 </html>
