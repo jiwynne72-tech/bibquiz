@@ -527,62 +527,95 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const p = document.getElementById("progress3");
   if(p) p.textContent = '';
   // don't auto-start games until user clicks menu
-});/* ---------- GAME 4 ---------- */
-let mode4='autore',score4=0,idx4=0,order4=[],totalQ4=5;
-function startGame4(){
-  order4=[...Array(libriBiblici.length).keys()];
-  shuffle(order4);order4=order4.slice(0,totalQ4);
-  idx4=0;score4=0;
-  document.getElementById('score4').textContent=score4;
+});
+
+/* ---------- GAME 4 ---------- */
+let mode4 = 'autore', score4 = 0, idx4 = 0, order4 = [], totalQ4 = 5;
+
+function startGame4() {
+  order4 = [...Array(libriBiblici.length).keys()];
+  shuffle(order4);
+  order4 = order4.slice(0, totalQ4);
+  idx4 = 0;
+  score4 = 0;
+  document.getElementById('score4').textContent = score4;
   showQuestion4();
 }
-function showQuestion4(){
-  if(idx4>=order4.length){
-    document.getElementById('question4').innerHTML="🎉 Fine quiz!";
-    document.getElementById('choices4').innerHTML='';
-    document.getElementById('status4').textContent=`Punteggio finale: ${score4}/`+ (totalQ4*10);
+
+function showQuestion4() {
+  const status4 = document.getElementById('status4');
+  status4.textContent = ''; // Pulisce lo stato precedente
+
+  if (idx4 >= order4.length) {
+    document.getElementById('question4').innerHTML = "🎉 Fine quiz!";
+    document.getElementById('choices4').innerHTML = '';
+    status4.textContent = `Punteggio finale: ${score4} su ${totalQ4 * 10}`;
     return;
   }
-  const l=libriBiblici[order4[idx4]];
-  let domanda,corretta,scelte;
-  if(mode4==='autore'){
-    domanda=`Chi è l'autore del libro di <b>${l.nome}</b>?`;
-    corretta=l.autore||'incerto';
-    scelte=[...new Set(libriBiblici.map(x=>x.autore||'incerto'))];
-  }else{
-    domanda=`Dove e quando fu scritto <b>${l.nome}</b>?`;
-    corretta=`${l.luogo||'incerto'} — ${l.anno||'incerto'}`;
-    scelte=[...new Set(libriBiblici.map(x=>`${x.luogo||'incerto'} — ${x.anno||'incerto'}`))];
+
+  const l = libriBiblici[order4[idx4]];
+  let domanda, corretta, scelte;
+
+  if (mode4 === 'autore') {
+    domanda = `Chi è l'autore del libro di <b>${l.nome}</b>?`;
+    corretta = l.autore || 'incerto';
+    scelte = [...new Set(libriBiblici.map(x => x.autore || 'incerto'))];
+  } else {
+    domanda = `Dove e quando fu scritto <b>${l.nome}</b>?`;
+    corretta = `${l.luogo || 'incerto'} — ${l.anno || 'incerto'}`;
+    scelte = [...new Set(libriBiblici.map(x => `${x.luogo || 'incerto'} — ${x.anno || 'incerto'}`))];
   }
-  shuffle(scelte);scelte=scelte.slice(0,3);
-  if(!scelte.includes(corretta))scelte[Math.floor(Math.random()*scelte.length)]=corretta;
-  document.getElementById('question4').innerHTML=domanda;
-  const c4=document.getElementById('choices4');c4.innerHTML='';
-  scelte.forEach(r=>{
-    const b=document.createElement('button');
-    b.className='choice';b.textContent=r;
-    b.onclick=()=>{
-      document.querySelectorAll('#choices4 .choice').forEach(x=>x.disabled=true);
-      if(r===corretta){b.classList.add('correct');score4+=10;document.getElementById('status4').textContent='✅ Corretto!';}
-      else{b.classList.add('wrong');score4-=5;document.getElementById('status4').textContent=`❌ Giusto: ${corretta}`;}
-      document.getElementById('score4').textContent=score4;
-      document.getElementById('qnum4').textContent=idx4+1;
-      idx4++;setTimeout(showQuestion4,2000);
+
+  shuffle(scelte);
+  scelte = scelte.slice(0, 3);
+  if (!scelte.includes(corretta)) scelte[Math.floor(Math.random() * scelte.length)] = corretta;
+
+  document.getElementById('question4').innerHTML = domanda;
+  const c4 = document.getElementById('choices4');
+  c4.innerHTML = '';
+
+  scelte.forEach(r => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.textContent = r;
+    b.onclick = () => {
+      // Disabilita tutti i bottoni per evitare click doppi
+      document.querySelectorAll('#choices4 .choice').forEach(x => x.style.pointerEvents = 'none');
+      
+      if (r === corretta) {
+        b.classList.add('correct');
+        score4 += 10;
+        status4.textContent = '✅ Corretto!';
+      } else {
+        b.classList.add('wrong');
+        score4 -= 5;
+        status4.textContent = `❌ Giusto: ${corretta}`;
+      }
+      
+      document.getElementById('score4').textContent = score4;
+      idx4++;
+      setTimeout(showQuestion4, 2000);
     };
     c4.appendChild(b);
   });
-  document.getElementById('qnum4').textContent=idx4+1;
-  document.getElementById('score4').textContent=score4;
+
+  document.getElementById('qnum4').textContent = idx4 + 1;
 }
-document.addEventListener('DOMContentLoaded',()=>{
-  document.getElementById('modeAuthor').onclick=()=>{mode4='autore';startGame4();};
-  document.getElementById('modePlaceYear').onclick=()=>{mode4='luogoAnno';startGame4();};
+
+// Inizializzazione finale e Service Worker
+document.addEventListener('DOMContentLoaded', () => {
+  // Bottoni modalità Game 4
+  document.getElementById('modeAuthor').onclick = () => { mode4 = 'autore'; startGame4(); };
+  document.getElementById('modePlaceYear').onclick = () => { mode4 = 'luogoAnno'; startGame4(); };
+
+  // Registrazione Service Worker per rendere l'app installabile
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').then(() => {
+      console.log('Service Worker Registrato');
+    });
+  }
 });
 
-<script>
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('./sw.js');
-  }
 </script>
 </body>
 </html>
