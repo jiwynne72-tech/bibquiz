@@ -1,7 +1,9 @@
 const CACHE_NAME = 'bib-quiz-v1';
 const ASSETS = [
+  './',
   './index.html',
-  './manifest.json'
+  './manifest.json',
+  './icon.png'
 ];
 
 self.addEventListener('install', (event) => {
